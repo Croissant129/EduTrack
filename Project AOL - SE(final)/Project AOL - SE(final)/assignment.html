@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Assignment Detail</title>
+  <link rel="stylesheet" href="/css/assignment.css" />
+  <link rel="stylesheet" href="/css/subject.css" /> 
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    .subtask-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin: 8px 0;
+      font-weight: 500;
+    }
+    .subtask-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="logo-container">
+      <img src="/image/EduTrack.png" alt="EduTrack Logo" class="logo-img">
+    </div>
+    <div class="user-actions">
+      <button id="notifBtn"><i class="fas fa-bell"></i></button>
+      <div class="popup notif-popup hidden" id="notifPopup">
+        <div id="notifContent">No upcoming assignments</div>
+      </div>
+      <div id="userBtn">
+        <div class="user-icon"><i class="fas fa-user"></i></div>
+        <span id="currentUserName">User</span>
+      </div>
+      <div class="popup user-popup hidden" id="userPopup">
+        <button id="userSettingsBtn">User Settings</button>
+        <button id="aboutBtn">About</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kontainer Assignment -->
+  <div class="assignment-container">
+    <!-- Tombol Back -->
+    <div class="assignment-header">
+      <button class="back-button" onclick="window.location.href='subject.html'">&#x3C;</button>
+    </div>
+
+    <!-- Assignment Title -->
+    <h2 id="assignmentTitle">[Assignment]</h2>
+
+    <!-- Input Subtask -->
+    <input type="number" id="taskCount" placeholder="Jumlah nomor subtask" />
+    <button onclick="generateSubtasks()">Buat Subtask</button>
+    <button onclick="deleteAllSubtasks()" style="background-color:#dc2626;">Hapus Semua</button>
+
+    <!-- Subtask Box -->
+    <div id="subtasks"></div>
+    <div id="progressBar"><div id="progress"></div></div>
+  </div>
+
+  <script>
+    const assignment = JSON.parse(sessionStorage.getItem("currentAssignment"));
+    if (!assignment) {
+      alert("Assignment tidak ditemukan.");
+      window.location.href = "subject.html";
+    }
+
+    document.getElementById("assignmentTitle").innerText =
+      `${assignment.name} - Deadline: ${assignment.deadline}`;
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const fullName = sessionStorage.getItem("currentUserName") || "User";
+      document.getElementById("currentUserName").textContent = fullName;
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        sessionStorage.clear();
+        window.location.href = "index.html";
+      });
+
+      document.getElementById("notifBtn").addEventListener("click", () => {
+        document.getElementById("notifPopup").classList.toggle("hidden");
+        document.getElementById("userPopup").classList.add("hidden");
+        loadNotifications();
+      });
+
+      document.getElementById("userBtn").addEventListener("click", () => {
+        document.getElementById("userPopup").classList.toggle("hidden");
+        document.getElementById("notifPopup").classList.add("hidden");
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest("#userBtn") && !e.target.closest("#userPopup")) {
+          document.getElementById("userPopup").classList.add("hidden");
+        }
+        if (!e.target.closest("#notifBtn") && !e.target.closest("#notifPopup")) {
+          document.getElementById("notifPopup").classList.add("hidden");
+        }
+      });
+
+      loadSubtasks();
+      loadNotifications();
+    });
+
+    const subtasksContainer = document.getElementById("subtasks");
+    const progressBar = document.getElementById("progress");
+
+    async function loadSubtasks() {
+      try {
+        const res = await fetch(`http://localhost:5000/subtasks/${assignment.id}`, {
+          credentials: "include"
+        });
+        const subtasks = await res.json();
+        if (res.ok) {
+          renderSubtasks(subtasks);
+        } else {
+          alert("Gagal memuat subtasks.");
+        }
+      } catch (err) {
+        console.error("Gagal load subtasks:", err);
+      }
+    }
+
+    function renderSubtasks(subtasks) {
+      subtasksContainer.innerHTML = "";
+      let checked = 0;
+
+      subtasks.forEach(sub => {
+        const item = document.createElement("div");
+        item.className = "subtask-item";
+        item.innerHTML = `
+          <input type="checkbox" id="sub-${sub.id}" ${sub.is_checked ? "checked" : ""}>
+          <label for="sub-${sub.id}">${sub.name}</label>
+        `;
+        const checkbox = item.querySelector("input");
+        checkbox.addEventListener("change", () => toggleSubtask(sub.id, checkbox.checked));
+        subtasksContainer.appendChild(item);
+        if (sub.is_checked) checked++;
+      });
+
+      const percent = subtasks.length === 0 ? 0 : Math.round((checked / subtasks.length) * 100);
+      progressBar.style.width = percent + "%";
+    }
+
+    async function toggleSubtask(id, value) {
+      try {
+        await fetch(`http://localhost:5000/subtasks/${id}`, {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_checked: value })
+        });
+        loadSubtasks();
+      } catch (err) {
+        alert("Gagal update checklist.");
+      }
+    }
+
+    async function generateSubtasks() {
+      const count = parseInt(document.getElementById("taskCount").value);
+      if (!count || count < 1) return alert("Jumlah tidak valid");
+
+      let existing = [];
+      try {
+        const res = await fetch(`http://localhost:5000/subtasks/${assignment.id}`, { credentials: "include" });
+        if (res.ok) existing = await res.json();
+      } catch (err) {
+        console.error("Gagal validasi:", err);
+      }
+
+      const existingNames = existing.map(e => e.name);
+      let created = 0;
+
+      for (let i = 1; i <= count; i++) {
+        const name = `Nomor ${i}`;
+        if (existingNames.includes(name)) continue;
+
+        const res = await fetch(`http://localhost:5000/subtasks/${assignment.id}`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name })
+        });
+
+        if (res.ok) created++;
+      }
+
+      if (created === 0) alert("Semua subtask sudah ada.");
+      loadSubtasks();
+    }
+
+    async function deleteAllSubtasks() {
+      if (!confirm("Yakin ingin menghapus semua subtask?")) return;
+
+      try {
+        const res = await fetch(`http://localhost:5000/subtasks/${assignment.id}`, {
+          method: "DELETE",
+          credentials: "include"
+        });
+        const data = await res.json();
+        if (res.ok) alert(data.message || "Berhasil dihapus.");
+        else alert(data.error || "Gagal hapus.");
+        loadSubtasks();
+      } catch (err) {
+        alert("Gagal menghubungi server.");
+      }
+    }
+
+    async function loadNotifications() {
+      const container = document.getElementById("notifContent");
+      container.innerHTML = "";
+      try {
+        const res = await fetch("http://localhost:5000/subjects", { credentials: "include" });
+        const subjects = await res.json();
+        const assignments = [];
+
+        for (let subject of subjects) {
+          const r = await fetch(`http://localhost:5000/assignments/${subject.id}`, { credentials: "include" });
+          const data = await r.json();
+          if (r.ok) {
+            data.forEach(a => a.subjectName = subject.name);
+            assignments.push(...data);
+          }
+        }
+
+        const now = new Date();
+        const upcoming = assignments.filter(a => new Date(a.deadline) >= now);
+        if (upcoming.length === 0) {
+          container.innerHTML = "<p>No upcoming assignments</p>";
+          return;
+        }
+
+        upcoming.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        upcoming.forEach(a => {
+          const p = document.createElement("p");
+          p.textContent = `${a.name} - ${a.subjectName} (due ${new Date(a.deadline).toLocaleDateString()})`;
+          container.appendChild(p);
+        });
+      } catch (err) {
+        container.innerHTML = "<p>Gagal memuat notifikasi</p>";
+      }
+    }
+  </script>
+</body>
+</html>
