@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subject Page</title>
+  <link rel="stylesheet" href="/css/subject.css" />
+  <link rel="stylesheet" href="/css/dashboard.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div>EduTrack</div>
+    <div class="user-actions">
+      <button id="notifBtn"><i class="fas fa-bell"></i></button>
+      <div class="popup notif-popup hidden" id="notifPopup">
+        <div id="notifContent">No upcoming assignments</div>
+      </div>
+      <div id="userBtn">
+        <div class="user-icon"><i class="fas fa-user"></i></div>
+        <span id="currentUserName">User</span>
+      </div>
+      <div class="popup user-popup hidden" id="userPopup">
+        <button id="userSettingsBtn">User Settings</button>
+        <button id="aboutBtn">About</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="main">
+      <div class="highlight" id="highlightBox"></div>
+
+      <div class="subject-header">
+        <button class="back-button" onclick="window.location.href='dashboard.html'">&#x3C;</button>
+        <div class="subject-title" id="subjectTitle">[Subject]</div>
+        <div></div>
+      </div>
+
+      <div class="assignment-list" id="assignmentList"></div>
+    </div>
+
+    <div class="todo">
+      <div class="todo-title">To do</div>
+      <div id="todoList"></div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="assignmentModal">
+    <div class="modal-content">
+      <h3>Add New Assignment</h3>
+      <input type="text" id="assignmentInput" placeholder="Enter assignment name" />
+      <input type="date" id="assignmentDate" />
+      <div class="button-row">
+        <button class="insert-btn" onclick="addAssignment()">Insert</button>
+        <button class="cancel-btn" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="assignmentContextMenu" class="popup hidden">
+    <input type="text" id="renameInput" placeholder="Rename assignment" />
+    <button onclick="renameAssignment()">Rename</button>
+    <button onclick="deleteAssignment()">Delete</button>
+  </div>
+
+  <div id="customAlert" class="custom-alert hidden"></div>
+
+  <script src="/javascript/subject.js"></script>
+</body>
+</html>

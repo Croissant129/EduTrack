@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - Sistem Manajemen Belajar</title>
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <div class="navbar">
+    <div>EduTrack</div>
+    <div class="user-actions">
+      <button id="notifBtn"><i class="fas fa-bell"></i></button>
+      <div class="popup notif-popup hidden" id="notifPopup">
+        <div id="notifContent">No upcoming assignments</div>
+      </div>
+      <div id="userBtn">
+        <div class="user-icon"><i class="fas fa-user"></i></div>
+        <span id="currentUserName">User</span>
+      </div>
+      <div class="popup user-popup hidden" id="userPopup">
+        <button id="userSettingsBtn">User Settings</button>
+        <button id="aboutBtn">About</button>
+        <button id="logoutBtn">Logout</button>
+      </div>
+    </div>
+  </div>  
+
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <button id="showInputBtn" class="btn add-btn">Add Subject</button>
+    <button id="removeBtn" class="btn remove-btn">Delete Subject</button>
+  </div>
+
+  <!-- Greeting -->
+  <div class="dashboard-label" id="dashboardGreeting"><b>Hello there, User</b></div>
+  <hr class="divider">
+
+  <!-- Kontainer utama -->
+  <div class="dashboard-content">
+    <!-- Subjects -->
+    <div id="subjectsContainer" class="subjects-container"></div>
+
+    <!-- Progress -->
+    <div class="dashboard-progress">
+      <div class="progress-title">Your Progress</div>
+      <div id="dashboardProgressList"></div>
+    </div>
+
+    <!-- To Do List -->
+    <div class="dashboard-todo">
+      <div class="todo-title">To do</div>
+      <div id="dashboardTodoList"></div>
+    </div>
+  </div>
+
+  <!-- Modal Add Subject -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Add New Subject</h3>
+      <input type="text" id="subjectInput" placeholder="Enter subject name">
+
+      <!-- ALERT BOX UNTUK VALIDASI -->
+      <div id="alertBox" class="alert hidden">Nama subject tidak boleh kosong!</div>
+
+      <div class="modal-actions">
+        <button id="insertBtn" class="btn add-btn">Insert Subject</button>
+        <button id="cancelBtn" class="btn cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Remove Subject -->
+  <div id="removeModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Select the Subject You Want to Delete</h3>
+      <div id="removeSubjectList" class="subjects-container"></div>
+      <div class="modal-actions">
+        <button id="confirmRemoveBtn" class="btn remove-btn" disabled>Delete</button>
+        <button id="cancelRemoveBtn" class="btn cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus -->
+  <div id="confirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="confirmText">Are you sure you want to delete this subject?</h3>
+      <div class="modal-actions">
+        <button id="finalRemoveBtn" class="btn remove-btn">Delete</button>
+        <button id="cancelFinalBtn" class="btn cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Sukses -->
+  <div id="successModal" class="modal hidden">
+    <div class="modal-content" style="text-align:center;">
+      <img src="/image/Success.png" alt="Success" style="width:100px;height:94px;">
+      <p id="successMessage">Berhasil!</p>
+      <button class="btn add-btn" id="successCloseBtn">OK</button>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const name = sessionStorage.getItem("currentUserName") || "User";
+      const nameTarget = document.getElementById("dashboardGreeting");
+      const nameSpan = document.getElementById("currentUserName");
+      if (nameTarget) nameTarget.innerHTML = `<b>Hello there, ${name}</b>`;
+      if (nameSpan) nameSpan.textContent = name;
+    });
+  </script>
+  <script src="/javascript/dashboard.js"></script>
+</body>
+</html>
